@@ -1,5 +1,5 @@
 import sys
-sys.path.append("../GLM-130B")
+sys.path.append("/root/fm/dev/GLM-130B")
 from quantization import quantize
 
 import argparse
