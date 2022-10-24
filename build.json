@@ -1,0 +1,13 @@
+{
+    "recipe":"image.def",
+    "target":"",
+    "scripts": {
+        "start":"python3 /app/start.py",
+        "bash": "/bin/bash"
+    },
+    "bind": {
+        "/model": "",
+        "/app/results": ""
+    },
+    "nvidia": true
+}
