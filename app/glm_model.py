@@ -1,5 +1,8 @@
 import sys
 from typing import Dict
+
+import torch.cuda
+
 sys.path.append("./")
 from common import FastInferenceInterface
 from glm_utils import *
@@ -10,7 +13,8 @@ class GLMModel(FastInferenceInterface):
         super().__init__(model_name, None)
         assert (torch.cuda.is_available())
         args = initialize_glm(parser)
-        self.device = torch.device('cuda', args.cuda_id)
+        # self.device = torch.device('cuda', args.cuda_id)
+        self.device = torch.cuda.current_device()
         self.batch_size = args.batch_size
         self.model_name = model_name
         self.upload_token = args.upload_token
