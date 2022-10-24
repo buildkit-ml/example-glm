@@ -239,16 +239,6 @@ def batch_filling_sequence(
     return results
 
 
-def initialize_glm(parser):
-    GLM130B.add_model_specific_args(parser)
-    known, args_list = parser.parse_known_args()
-    args = get_args(args_list)
-    args = argparse.Namespace(**vars(args), **vars(known))
-    args.do_train = False
-    initialize_distributed(args)
-    return args
-
-
 def initialize_model_and_tokenizer(args):
     tokenizer = get_tokenizer(args)
     # Initialize model

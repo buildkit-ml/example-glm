@@ -9,10 +9,9 @@ from glm_utils import *
 
 
 class GLMModel(FastInferenceInterface):
-    def __init__(self, model_name: str, parser) -> None:
-        super().__init__(model_name, None)
+    def __init__(self, model_name: str, args) -> None:
         assert (torch.cuda.is_available())
-        args = initialize_glm(parser)
+        super().__init__(model_name, args)
         # self.device = torch.device('cuda', args.cuda_id)
         self.device = torch.cuda.current_device()
         self.batch_size = args.batch_size

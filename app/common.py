@@ -11,7 +11,6 @@ class FastInferenceInterface:
     def __init__(self, model_name: str, args=None) -> None:
         self.model_name = model_name
         self.model_id = args.model_id
-        self.rank = args.rank
 
     def infer(self, job_id, args) -> Dict:
         pass
@@ -48,7 +47,7 @@ class FastInferenceInterface:
         job_id = instruction['id']
         if isinstance(job_id, str):
             job_id = [job_id]
-        try: 
+        try:
             self.infer(job_id, instruction['args'])
         except Exception as e:
             traceback.print_exc()
@@ -68,7 +67,7 @@ class FastInferenceInterface:
 
     def start(self):
         my_rank = dist.get_rank()
-        nats_url = os.environ.get("NATS_URL", "localhost:8092/my_coord")+'.'+str(my_rank)
+        nats_url = os.environ.get("NATS_URL", "localhost:8092/my_coord")
         if my_rank == 0:
             async def listen():
                 self.nc = await nats.connect(f"nats://{nats_url}")
