@@ -14,9 +14,9 @@ class GLMModel(FastInferenceInterface):
         super().__init__(model_name, args)
         # self.device = torch.device('cuda', args.cuda_id)
         self.device = torch.cuda.current_device()
-        self.batch_size = args.batch_size
+        self.batch_size = args.together_service_batch_size
         self.model_name = model_name
-        self.upload_token = args.upload_token
+        self.upload_token = os.environ.get("TOGETHER_UPLOAD_TOKEN", "xx")
         try:
             self.model, self.tokenizer = initialize_model_and_tokenizer(args)
             self.end_tokens = [self.tokenizer.get_command("eop"), self.tokenizer.get_command("eos")]
@@ -30,6 +30,7 @@ class GLMModel(FastInferenceInterface):
         print(f"<GLMModel>__init__: rank-{dist.get_rank()} finished!")
 
     def infer(self, job_ids=None, args=None) -> Dict:
+        print(f"<Infer> Rank-{dist.get_rank()} joined infer")
         coord_url = os.environ.get("COORDINATOR_URL", "localhost:8093/my_coord")
         worker_name = os.environ.get("WORKER_NAME", "planetv2")
         try:
@@ -92,7 +93,7 @@ class GLMModel(FastInferenceInterface):
                                             top_k=config['top_k'], top_p=config['top_p'], end_tokens=self.end_tokens)
 
                 cur_answer, cur_last_layer_embedding, cur_top_logprobs = fill_blanks_efficient(
-                    current_raw_text, self.model, self.tokenizer, strategy, config)
+                    current_raw_text, self.model, self.tokenizer, strategy, self.device, config)
                 answers.extend(cur_answer)
                 if cur_last_layer_embedding is None:
                     last_layer_embedding = None

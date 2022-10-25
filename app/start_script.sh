@@ -9,9 +9,9 @@ TEMP=0.9
 TOPK=1
 TOPP=0
 
-
-
-MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
+MODEL_ARGS="--together-model-id  myFirstGlmDebugID001 \
+            --together-upload-token Gathering-Open-teeth-7office-Irene-drill-alec2-Unguided-Hardening2-Darkish-humid-Coset-gaze-8Pines-clambake \
+            --model-parallel-size ${MP_SIZE} \
             --num-layers 70 \
             --hidden-size 12288 \
             --inner-hidden-size 32768 \
@@ -32,5 +32,4 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --top_k $TOPK \
             --top_p $TOPP"
 
-
-torchrun --nproc_per_node $MP_SIZE start.py $MODEL_ARGS
+torchrun --rdzv_endpoint=127.0.0.1:29600 --nproc_per_node $MP_SIZE start.py $MODEL_ARGS

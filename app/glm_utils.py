@@ -339,7 +339,7 @@ def get_masks_and_position_ids_batch(seqs, mask_position, max_gen_length, pad_po
     return tokens, attention_mask, position_ids
 
 
-def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, device, config=None):
+def fill_blanks_efficient(raw_texts, model, tokenizer, strategy, device, config=None):
     seqs = []
     generation_mask = "[gMASK]"
     use_gmask = True

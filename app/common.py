@@ -10,13 +10,14 @@ import torch.distributed as dist
 class FastInferenceInterface:
     def __init__(self, model_name: str, args=None) -> None:
         self.model_name = model_name
-        self.model_id = args.model_id
-
+        self.model_id = args.together_model_id
     def infer(self, job_id, args) -> Dict:
         pass
 
-    async def on_message(self, msg):
-        self.nc.publish(self.model_name+f".{self.model_id}", "START")
+    async def on_message_prime_worker(self, msg):
+        nats_url = os.environ.get("NATS_URL", "localhost:8092/my_coord")
+        nc = await nats.connect(f"nats://{nats_url}")
+        await nc.publish(self.model_name+f".{self.model_id}", b"START")
         instruction = json.loads(msg.data.decode("utf-8"))
         instruction['args'] = json.loads(instruction['args'])
         try:
@@ -34,12 +35,16 @@ class FastInferenceInterface:
             instruction['args']['temperature'] = 0.9
         if 'top_p'not in instruction['args']:
             instruction['args']['top_p'] = 0
+        if 'top_k'not in instruction['args']:
+            instruction['args']['top_k'] = 50
         if 'max_tokens' not in instruction['args']:
             instruction['args']['max_tokens'] = 16
         if 'stop' not in instruction['args']:
             instruction['args']['stop'] = []
         if 'echo' not in instruction['args']:
             instruction['args']['echo'] = False
+        if 'prompt_embedding' not in instruction['args']:
+            instruction['args']['prompt_embedding'] = False
         if 'logprobs' not in instruction['args']:
             instruction['args']['logprobs'] = 0
 
@@ -59,8 +64,9 @@ class FastInferenceInterface:
     def on_open(self, ws):
         ws.send(f"JOIN:{self.model_name}")
 
-    async def on_secondary_message(self, msg):
-        if msg == 'START':
+    async def on_message_other_worker(self, msg):
+        print(f"<on_message_other_worker-{dist.get_rank()} recv: {msg}>")
+        if msg.data.decode("utf-8") == 'START':
             self.infer(None, None)
         else:
             raise Exception("Unknown message")
@@ -70,16 +76,17 @@ class FastInferenceInterface:
         nats_url = os.environ.get("NATS_URL", "localhost:8092/my_coord")
         if my_rank == 0:
             async def listen():
-                self.nc = await nats.connect(f"nats://{nats_url}")
-                sub = await self.nc.subscribe(subject=self.model_name, queue=self.model_name, cb=self.on_message)
+                nc = await nats.connect(f"nats://{nats_url}")
+                sub = await nc.subscribe(subject=self.model_name, queue=self.model_name, cb=self.on_message_prime_worker)
             loop = asyncio.get_event_loop()
             future = asyncio.Future()
             asyncio.ensure_future(listen())
             loop.run_forever()
         else:
+            print("---")
             async def listen():
-                self.nc = await nats.connect(f"nats://{nats_url}")
-                sub = await self.nc.subscribe(subject=self.model_name+f".{self.model_id}", cb=self.on_secondary_message)
+                nc = await nats.connect(f"nats://{nats_url}")
+                sub = await nc.subscribe(subject=self.model_name+f".{self.model_id}", cb=self.on_message_other_worker)
             loop = asyncio.get_event_loop()
             future = asyncio.Future()
             asyncio.ensure_future(listen())

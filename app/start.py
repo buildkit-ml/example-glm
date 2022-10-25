@@ -33,10 +33,10 @@ def add_generation_specific_args(parser):
 
 
 def foo_port_add_coordinator_args(parser):
-    parser.add_argument('--batch-size', type=int, default=8, metavar='S',
+    parser.add_argument('--together-service-batch-size', type=int, default=8, metavar='S',
                         help='batch-size for inference (default:8)')
-    parser.add_argument("--model-id", type=str, default="someID", help="-")
-    parser.add_argument("--upload-token", type=str, default="someToken, do not put it here", help="-")
+    parser.add_argument("--together-model-id", type=str, default="someID", help="-")
+    parser.add_argument("--together-upload-token", type=str, default="someToken, do not put it here", help="-")
 
 
 def initialize(extra_args_provider):
@@ -49,7 +49,6 @@ def initialize(extra_args_provider):
     known, args_list = parser.parse_known_args()
     print("initialize1: ", known)
     print("initialize2: ", args_list)
-    initialize_distributed(args_list)
     args = get_args(args_list)
     args = argparse.Namespace(**vars(args), **vars(known))
     args.do_train = False
